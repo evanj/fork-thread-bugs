@@ -32,7 +32,10 @@ int main() {
     // explicit cast to avoid a const warning: this is safe in this case
     const struct gaicb** const_cblist = (const struct gaicb**) cblist;
     error = gai_suspend(const_cblist, remaining_hosts, NULL);
-    assert(error == 0);
+    // if the requests are all completed before we call gai_suspend, we get ALLDONE
+    // this happens under valgrind, and probably in rare cases in reality
+    // TODO: Also handle EAI_AGAIN and EAI_INTR
+    assert(error == 0 || error == EAI_ALLDONE);
 
     // find the host that resolved
     for (int i = 0; i < remaining_hosts; i++) {
