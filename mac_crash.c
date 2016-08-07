@@ -1,44 +1,14 @@
-// https://bugs.python.org/issue13829
-// http://bugs.python.org/issue27126
-// http://www.linuxprogrammingblog.com/threads-and-fork-think-twice-before-using-them
-// https://github.com/google/googletest/blob/master/googletest/docs/AdvancedGuide.md#death-tests-and-threads
-// http://thorstenball.com/blog/2014/10/13/why-threads-cant-fork/
-// https://github.com/google/googletest/issues/33
-// https://mail.scipy.org/pipermail/numpy-discussion/2012-August/063593.html
+/*
+Compile with: clang -Wall -Wextra -Werror -o mac_crash mac_crash.c -lsqlite3
+C version of the crash from osx_python_crash_v1.py
 
-// libdispatch: queue.c has as atfork handler that explicitly sets:
-// linked list pointers to a crash value.
-// sqlite3 schedules stuff in the main thread ... for reasons I don't understand
-// it explicitly calls dispatch_async from sqlite3_initialize, passing the main queue
-// 
-// DISPATCH_EXPORT DISPATCH_NOTHROW
-// void
-// dispatch_atfork_child(void)
-// {
-//   void *crash = (void *)0x100;
-//   size_t i;
+Why it crashes:
 
-// #if HAVE_MACH
-//   _dispatch_mach_host_port_pred = 0;
-//   _dispatch_mach_host_port = MACH_VOUCHER_NULL;
-// #endif
-//   _voucher_atfork_child();
-//   if (_dispatch_safe_fork) {
-//     return;
-//   }
-//   _dispatch_child_of_unsafe_fork = true;
-
-//   _dispatch_main_q.dq_items_head = crash;
-//   _dispatch_main_q.dq_items_tail = crash;
-
-//   _dispatch_mgr_q.dq_items_head = crash;
-//   _dispatch_mgr_q.dq_items_tail = crash;
-
-//   for (i = 0; i < DISPATCH_ROOT_QUEUE_COUNT; i++) {
-//     _dispatch_root_queues[i].dq_items_head = crash;
-//     _dispatch_root_queues[i].dq_items_tail = crash;
-//   }
-// }
+libdispatch: queue.c has as atfork handler that explicitly sets:
+linked list pointers to a crash value.
+sqlite3 schedules stuff in the main thread ... for reasons I don't understand
+it explicitly calls dispatch_async from sqlite3_initialize, passing the main queue
+*/
 
 #include <stdio.h>
 #include <unistd.h>
